@@ -24,11 +24,11 @@
 
 # 1
 
-![](./1.png)
+<img src="./pic/svg/1.svg" alt="1_img" width="70%"/>
 
 # 2a
 
-![](./2a.png)
+<img src="./pic/svg/2a.svg" alt="2a_img" width="70%"/>
 
 # 2b
 <!-- Таблицы фактов:
@@ -53,8 +53,8 @@ VIP (very important person) список
 
 Можно (нужно) ещё добавить: бар, акции, отзывы, турниры, результаты игр, таблица оборудования. -->
 
-![](./2b.png)
+<img src="./pic/svg/2b.svg" alt="2b_img" width="70%"/>
 
 # 2c
 
-![](./2c.png)
+<img src="./pic/svg/2c.svg" alt="2c_img" width="70%"/>
