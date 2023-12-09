@@ -66,3 +66,15 @@ VIP (very important person) список
 # 2c (физическая модель)
 
 <img src="./pic/svg/2c.svg" alt="2c_img" width="70%"/>
+
+# 3 (создание БД)
+
+```shell
+psql -U postgres -d postgres -f task03.sql
+```
+
+# 4 (Импортирование данных)
+
+```shell
+psql -U postgres -d postgres -f task04.sql
+```
