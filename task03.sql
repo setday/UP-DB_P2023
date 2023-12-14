@@ -1,3 +1,5 @@
+-- DROP SCHEMA db_project CASCADE;
+
 CREATE SCHEMA IF NOT EXISTS db_project;
 SET search_path = db_project, public;
 
@@ -49,7 +51,7 @@ CREATE TABLE IF NOT EXISTS Event_Table (
 	event_id SERIAL PRIMARY KEY,
 	table_id INTEGER,
 	date_start TIMESTAMP NOT NULL DEFAULT NOW()::timestamp,
-	date_end TIMESTAMP NOT NULL DEFAULT '3000-01-01',
+	date_end TIMESTAMP NOT NULL DEFAULT '3000-01-01 23:09:00',
 	CONSTRAINT fk_event_table
 		FOREIGN KEY (table_id)
 			REFERENCES Gambling_Table(table_id)
@@ -127,3 +129,5 @@ CREATE TABLE IF NOT EXISTS Chip_Transaction (
 				ON DELETE CASCADE,
 	CONSTRAINT valid_type CHECK (type_of_the_transaction IN ('Bar', 'Game', 'Chip'))
 );
+
+
