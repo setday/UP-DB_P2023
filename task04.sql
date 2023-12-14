@@ -1,8 +1,12 @@
+SET search_path = db_project, public;
+
 ---- Information about players
 
 -- Player table
-INSERT INTO Player (nickname, first_name, last_name, address) 
-VALUES 
+truncate table Player cascade;
+
+insert into Player (nickname, first_name, last_name, address) 
+values 
     ('RedHat',         'Иван',      'Смирнов',      'ул. Приморская, 1, г. Москва, Россия'),
     ('SteelPan',       'Анастасия', 'Иванова',      'пр. Ленина, 23, г. Санкт-Петербург, Россия'),
     ('WildCard',       'Мария',     'Кузнецова',    'ул. Ленинградская, 5, г. Новосибирск, Россия'),
@@ -33,20 +37,24 @@ VALUES
 
 
 -- Banned table
-INSERT INTO Blacklist (ban_reason, ban_date, player_id) 
-VALUES 
-    ('Player repeatedly violated game rules despite warnings.',                      '25-04-2020', 11), -- Ban player with ID 11 for violating rules
-    ('Player cheated during a poker game.',                                          '10-07-2021',  3), -- Ban player with ID 3 for cheating
-    ('Player was caught attempting to manipulate game outcomes.',                    '15-10-2021', 14), -- Ban player with ID 14 for manipulating game outcomes
-    ('Player exhibited aggressive behavior towards other participants.',             '28-02-2022',  5), -- Ban player with ID 5 for aggressive behavior
-    ('Player engaged in fraudulent behavior, manipulating chip counts.',             '03-12-2022',  7), -- Ban player with ID 7 for fraudulent behavior
-    ('Player caused disruption and confrontation at the roulette gambling table.',   '18-09-2023', 19); -- Ban player with ID 19 for disruptive conduct
+truncate table Blacklist cascade;
+
+insert into Blacklist (ban_reason, ban_date, player_id) 
+values 
+    ('Player exhibited aggressive behavior towards other participants.',             '2023-02-28',  5), -- Ban player with ID 5 for aggressive behavior
+    ('Player repeatedly violated game rules despite warnings.',                      '2023-04-25', 11), -- Ban player with ID 11 for violating rules
+    ('Player cheated during a poker game.',                                          '2023-07-10',  3), -- Ban player with ID 3 for cheating
+    ('Player caused disruption and confrontation at the roulette gambling table.',   '2023-09-18', 19), -- Ban player with ID 19 for disruptive conduct
+    ('Player was caught attempting to manipulate game outcomes.',                    '2023-10-15', 14), -- Ban player with ID 14 for manipulating game outcomes
+    ('Player engaged in fraudulent behavior, manipulating chip counts.',             '2023-12-03',  7); -- Ban player with ID 7 for fraudulent behavior
 
 ---- Information about games
 
 -- Game description table
-INSERT INTO Game_Description (game_name, min_players, max_players, hall)
-VALUES 
+truncate table Game_Description cascade;
+
+insert into Game_Description (game_name, min_players, max_players, hall)
+values 
     ('Baccarat',          1,   8, 'Red'),
     ('Blackjack',         1,   7, 'Red'),
     ('Poker',             2,  10, 'Red'),
@@ -62,8 +70,10 @@ VALUES
     ('Pai Gow Poker',     2,  10, 'Yellow');
 
 -- Gambling table table
-INSERT INTO Gambling_Table (out_of_order, game_id)
-VALUES 
+truncate table Gambling_Table cascade;
+
+insert into Gambling_Table (out_of_order, game_id)
+values 
     (FALSE, 1),  -- Baccarat
     (FALSE, 1),  -- Baccarat
     (FALSE, 2),  -- Blackjack
@@ -97,58 +107,117 @@ VALUES
     (FALSE, 13), -- Pai Gow Poker
     (FALSE, 13); -- Pai Gow Poker
 
--- Event table (Under maintenance)
--- DO $$DECLARE
---     first_date DATE := '2020-01-01';
---     last_date DATE := '2023-12-01';
+-- Event table
+truncate table Event_Table cascade;
 
---     f_r_d DATE := '2020-01-01';
---     s_r_d DATE := '2023-12-01';
--- BEGIN
---     FOR i IN 1..120 LOOP
---         INSERT INTO Event_Table (table_id, date_start, date_end)
---         f_r_d := TIMESTAMP first_date + (RANDOM() * (TIMESTAMP last_date - TIMESTAMP first_date))::interval;
---         s_r_d := TIMESTAMP first_date + (RANDOM() * (TIMESTAMP last_date - TIMESTAMP first_date))::interval;
---         VALUES 
---             (
---                 1 + FLOOR(RANDOM() * 13),
---                 m;
---             (22 + FLOOR(RANDOM() * 6), CURRENT_DATE + (i * INTERVAL '1 day'), CURRENT_DATE + ((i + 1) * INTERVAL '1 day'));
---     END LOOP;
--- END$$;
+DO $$DECLARE
+    event_count INTEGER := 2000;
+
+    first_date TIMESTAMP := '2023-01-01 00:00:00';
+    last_date TIMESTAMP := '2023-12-01 00:00:00';
+
+    f_r NUMERIC := 0;
+    s_r NUMERIC := 0;
+
+    f_r_d TIMESTAMP := '2023-01-01 00:00:00';
+    s_r_d TIMESTAMP := '2023-12-01 00:00:00';
+
+    r_tb INTEGER := 0;
+BEGIN
+    FOR i IN 1..event_count LOOP
+        f_r := RANDOM();
+        s_r := f_r + 0.00002 + RANDOM() / 6000;
+
+        f_r_d := first_date + (least(f_r, s_r) * (last_date - first_date));
+        s_r_d := first_date + (greatest(f_r, s_r) * (last_date - first_date));
+
+        if random() > 0.5 then
+            r_tb := 1 + FLOOR(RANDOM() * 13);
+        else
+            r_tb := 22 + FLOOR(RANDOM() * 6);
+        end if;
+
+        if exists (select * from Event_Table where table_id = r_tb and date_start < s_r_d and date_end > f_r_d) then
+            continue;
+        end if;
+
+        insert into Event_Table (table_id, date_start, date_end)
+        values (r_tb, f_r_d, s_r_d);
+    END LOOP;
+END$$;
+
+delete from Event_Table
+ where table_id = 10
+   and date_start > '2023-09-18 00:00:00';
 
 -- Cached
 
--- INSERT INTO Event_Table (table_id, date_start, date_end)
--- VALUES ;
+-- insert into Event_Table (table_id, date_start, date_end)
+-- values ;
 
--- Participation table (Under maintenance)
--- DO $$DECLARE
---     player_count INTEGER := 27;
---     event_count INTEGER := 120;
---
---     player_id INTEGER;
---     event_id INTEGER;
--- BEGIN
---     FOR i IN 1..event_count LOOP
---         player_id := 1 + FLOOR(RANDOM() * player_count);
---         event_id := i;
---
---         INSERT INTO Participation (player_id, event_id)
---         VALUES (player_id, event_id);
---     END LOOP;
--- END$$;
+-- Participation table
+truncate table Participation cascade;
+
+DO $$DECLARE
+    player_count INTEGER := 27;
+
+    g_id INTEGER := 0;
+    e_start TIMESTAMP := '2023-01-01 00:00:00';
+
+    r_player_count INTEGER := 0;
+    min_player_count INTEGER := 0;
+    max_player_count INTEGER := 0;
+
+    r_player_id INTEGER;
+
+    i INTEGER;
+BEGIN
+    FOR i IN select event_id from Event_Table LOOP
+        e_start := (select date_start from Event_Table where event_id = i);
+
+        g_id = (select game_id
+                  from Gambling_Table
+                 where table_id = (select table_id
+                                     from Event_Table
+                                    where event_id = i));
+
+        min_player_count := (select min_players
+                              from Game_Description
+                             where game_id = g_id);
+        max_player_count := (select max_players
+                               from Game_Description
+                              where game_id = g_id);
+
+        r_player_count := min_player_count + FLOOR(RANDOM() * (max_player_count - min_player_count));
+
+        FOR _ IN 1..r_player_count LOOP
+            r_player_id := 1 + FLOOR(RANDOM() * player_count);
+
+            if exists (select * from Participation where r_player_id = player_id and event_id = i) then
+                continue;
+            end if;
+
+            if exists (select * from Blacklist where player_id = r_player_id and ban_date > e_start) then
+                continue;
+            end if;
+
+            insert into Participation (player_id, event_id)
+            values (r_player_id, i);
+        END LOOP;
+    END LOOP;
+END$$;
 
 -- Cached
-
--- INSERT INTO Participation (player_id, event_id)
--- VALUES ;
+-- insert into Participation (player_id, event_id)
+-- values ;
 
 ---- Bar
 
 -- Drink info table
-INSERT INTO Drink_Info (drink_title, alcohol_percentage, drink_price)
-VALUES
+truncate table Drink_Info cascade;
+
+insert into Drink_Info (drink_title, alcohol_percentage, drink_price)
+values
     ('Whiskey',      40.0,  10),
     ('Vodka',        40.0,   8),
     ('Beer',          5.0,   5),
@@ -166,59 +235,79 @@ VALUES
     ('Martini',      30.0,  13);
 
 
--- Order table (Under maintenance)
--- DO $$
--- DECLARE
---     player_count INTEGER := 27;
---     order_count INTEGER := 40;
---
---     first_date TIMESTAMP := '2020-01-01 00:00:00';
---     last_date TIMESTAMP := '2023-12-01 00:00:00';
---
---     player_id INTEGER;
---     order_date TIMESTAMP;
--- BEGIN
---     FOR i IN 1..order_count LOOP
---         player_id := 1 + FLOOR(RANDOM() * player_count);
---         order_date := (first_date + (RANDOM() * (last_date - first_date)));
---
---         INSERT INTO Order_Table (player_id, order_date)
---         VALUES (player_id, order_date);
---     END LOOP;
--- END
--- $$;
+-- Order table
+truncate table Order_Table cascade;
+
+DO $$
+DECLARE
+    player_count INTEGER := (select count(*) from Player);
+    min_player INTEGER := (select min(player_id) from Player);
+
+    order_count INTEGER := 500;
+
+    first_date TIMESTAMP := '2020-01-01 00:00:00';
+    last_date TIMESTAMP := '2023-12-01 00:00:00';
+
+    r_player_id INTEGER;
+    r_order_date TIMESTAMP;
+BEGIN
+    FOR _ IN 1..order_count LOOP
+        r_player_id := min_player + FLOOR(RANDOM() * player_count);
+        r_order_date := (first_date + (RANDOM() * (last_date - first_date)));
+
+        if exists (select * from Order_Table where player_id = r_player_id and order_date < r_order_date) then
+            continue;
+        end if;
+
+        insert into Order_Table (player_id, order_date)
+        values (r_player_id, r_order_date);
+    END LOOP;
+END$$;
 
 -- Cached
+-- insert into Order_Table (player_id, order_date)
+-- values ;
 
--- INSERT INTO Order_Table (player_id, order_date)
--- VALUES ;
+-- Sales table
+truncate table Sale cascade;
 
--- Sales table (Under maintenance)
--- DO $$
--- DECLARE
---     drink_count INTEGER := 15;
---     order_count INTEGER := 40;
---
---     drink_id INTEGER;
---     order_id INTEGER;
---     drink_count INTEGER;
--- BEGIN
---     FOR i IN 1..order_count LOOP
---         drink_id := 1 + FLOOR(RANDOM() * drink_count);
---         order_id := i;
---         drink_count := 1 + FLOOR(RANDOM() * 5);
---
---         INSERT INTO Sales (drink_id, order_id, drink_count)
---         VALUES (drink_id, order_id, drink_count);
---     END LOOP;
--- END
--- $$;
--- INSERT INTO Sales (drink_id, order_id, drink_count)
--- VALUES ;
+DO $$
+DECLARE
+    count_drink INTEGER := (select count(drink_id) from Drink_Info);
+    min_drink INTEGER := (select min(drink_id) from Drink_Info);
+
+    r_drink_id INTEGER;
+    r_order_id INTEGER;
+    r_order_drink_count INTEGER;
+    r_drink_quantity INTEGER;
+
+    i INTEGER;
+BEGIN
+    FOR i IN select order_id from Order_Table LOOP
+        r_order_id := i;
+        r_order_drink_count := 1 + FLOOR(RANDOM() * 3);
+
+        FOR _ IN 1..r_order_drink_count LOOP
+            r_drink_id := min_drink + FLOOR(RANDOM() * count_drink);
+            r_drink_quantity := 1 + FLOOR(RANDOM() * 3);
+
+            if exists (select * from Sale where drink_id = r_drink_id and order_id = r_order_id) then
+                continue;
+            end if;
+
+            insert into Sale (drink_id, order_id, quantity)
+            values (r_drink_id, r_order_id, r_drink_quantity);
+        END LOOP;
+    END LOOP;
+END$$;
+
+-- Cached
+-- insert into Sales (drink_id, order_id, drink_count)
+-- values ;
 
 ---- Transactions
 
--- Transaction table
+-- Transaction table (under maintenance)
 -- DO $$
 -- DECLARE
 --     player_count INTEGER := 27;
@@ -233,13 +322,13 @@ VALUES
 --         transaction_date := (CURRENT_DATE - (RANDOM() * 365));
 --         transaction_amount := 1 + FLOOR(RANDOM() * 1000);
 --
---         INSERT INTO Transaction (player_id, transaction_date, transaction_amount)
---         VALUES (player_id, transaction_date, transaction_amount);
+--         insert into Transaction (player_id, transaction_date, transaction_amount)
+--         values (player_id, transaction_date, transaction_amount);
 --     END LOOP;
 -- END
 -- $$;
 
 -- Cached
 
--- INSERT INTO Transaction (player_id, transaction_date, transaction_amount)
--- VALUES ;
+-- insert into Transaction (player_id, transaction_date, transaction_amount)
+-- values ;
