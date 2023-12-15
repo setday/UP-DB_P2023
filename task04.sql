@@ -1,9 +1,9 @@
-SET search_path = db_project, public;
+set search_path = db_project, public;
 
 ---- Information about players
 
 -- Player table
-truncate table Player cascade;
+-- truncate table Player cascade;
 
 insert into Player (nickname, first_name, last_name, address) 
 values 
@@ -37,7 +37,7 @@ values
 
 
 -- Banned table
-truncate table Blacklist cascade;
+-- truncate table Blacklist cascade;
 
 insert into Blacklist (ban_reason, ban_date, player_id) 
 values 
@@ -51,7 +51,7 @@ values
 ---- Information about games
 
 -- Game description table
-truncate table Game_Description cascade;
+-- truncate table Game_Description cascade;
 
 insert into Game_Description (game_name, min_players, max_players, hall)
 values 
@@ -70,85 +70,91 @@ values
     ('Pai Gow Poker',     2,  10, 'Yellow');
 
 -- Gambling table table
-truncate table Gambling_Table cascade;
+-- truncate table Gambling_Table cascade;
 
 insert into Gambling_Table (out_of_order, game_id)
 values 
-    (FALSE, 1),  -- Baccarat
-    (FALSE, 1),  -- Baccarat
-    (FALSE, 2),  -- Blackjack
-    (FALSE, 2),  -- Blackjack
-    (FALSE, 2),  -- Blackjack
-    (FALSE, 3),  -- Poker
-    (FALSE, 3),  -- Poker
-    (FALSE, 3),  -- Poker
-    (FALSE, 4),  -- Crazy Eights
+    (false, 1),  -- Baccarat
+    (false, 1),  -- Baccarat
+    (false, 2),  -- Blackjack
+    (false, 2),  -- Blackjack
+    (false, 2),  -- Blackjack
+    (false, 3),  -- Poker
+    (false, 3),  -- Poker
+    (false, 3),  -- Poker
+    (false, 4),  -- Crazy Eights
     
-    (TRUE,  5),  -- European Roulette
-    (FALSE, 5),  -- European Roulette
-    (FALSE, 5),  -- European Roulette
-    (FALSE, 6),  -- Bingo
+    (true,  5),  -- European Roulette
+    (false, 5),  -- European Roulette
+    (false, 5),  -- European Roulette
+    (false, 6),  -- Bingo
 
 -- This hall is under maintenance
-    (TRUE, 7),   -- Keno
-    (TRUE, 8),   -- Cribbage
-    (TRUE, 8),   -- Cribbage
-    (TRUE, 9),   -- Pontoon
-    (TRUE, 9),   -- Pontoon
-    (TRUE, 9),   -- Pontoon
-    (TRUE, 10),  -- Hearts
-    (TRUE, 10),  -- Hearts
-    (TRUE, 10),  -- Hearts
+    (true, 7),   -- Keno
+    (true, 8),   -- Cribbage
+    (true, 8),   -- Cribbage
+    (true, 9),   -- Pontoon
+    (true, 9),   -- Pontoon
+    (true, 9),   -- Pontoon
+    (true, 10),  -- Hearts
+    (true, 10),  -- Hearts
+    (true, 10),  -- Hearts
 
-    (FALSE, 11), -- Craps
-    (FALSE, 11), -- Craps
-    (FALSE, 12), -- War
-    (FALSE, 13), -- Pai Gow Poker
-    (FALSE, 13), -- Pai Gow Poker
-    (FALSE, 13); -- Pai Gow Poker
+    (false, 11), -- Craps
+    (false, 11), -- Craps
+    (false, 12), -- War
+    (false, 13), -- Pai Gow Poker
+    (false, 13), -- Pai Gow Poker
+    (false, 13); -- Pai Gow Poker
 
 -- Event table
-truncate table Event_Table cascade;
+-- truncate table Event_Table cascade;
 
-DO $$DECLARE
-    event_count INTEGER := 2000;
+do $$
+declare
+    event_count integer := 2000;
 
-    first_date TIMESTAMP := '2023-01-01 00:00:00';
-    last_date TIMESTAMP := '2023-12-01 00:00:00';
+    first_date timestamp := '2023-01-01 00:00:00';
+    last_date timestamp := '2023-12-01 00:00:00';
 
     f_r NUMERIC := 0;
     s_r NUMERIC := 0;
 
-    f_r_d TIMESTAMP := '2023-01-01 00:00:00';
-    s_r_d TIMESTAMP := '2023-12-01 00:00:00';
+    f_r_d timestamp := '2023-01-01 00:00:00';
+    s_r_d timestamp := '2023-12-01 00:00:00';
 
-    r_tb INTEGER := 0;
-BEGIN
-    FOR i IN 1..event_count LOOP
-        f_r := RANDOM();
-        s_r := f_r + 0.00002 + RANDOM() / 6000;
+    r_tb integer := 0;
+begin
+    for _ in 1..event_count loop
+        f_r := random();
+        s_r := f_r + 0.00002 + random() / 6000;
 
         f_r_d := first_date + (least(f_r, s_r) * (last_date - first_date));
         s_r_d := first_date + (greatest(f_r, s_r) * (last_date - first_date));
 
         if random() > 0.5 then
-            r_tb := 1 + FLOOR(RANDOM() * 13);
+            r_tb := 1 + floor(random() * 13);
         else
-            r_tb := 22 + FLOOR(RANDOM() * 6);
+            r_tb := 22 + floor(random() * 6);
         end if;
 
-        if exists (select * from Event_Table where table_id = r_tb and date_start < s_r_d and date_end > f_r_d) then
+        if r_tb = 10 and f_r_d > '2023-09-18 00:00:00' then
+            continue;
+        end if;
+
+        if exists (select *
+                     from Event_Table
+                    where table_id = r_tb
+                      and date_start < s_r_d
+                      and date_end > f_r_d) then
             continue;
         end if;
 
         insert into Event_Table (table_id, date_start, date_end)
         values (r_tb, f_r_d, s_r_d);
-    END LOOP;
-END$$;
-
-delete from Event_Table
- where table_id = 10
-   and date_start > '2023-09-18 00:00:00';
+    end loop;
+end
+$$;
 
 -- Cached
 
@@ -156,56 +162,47 @@ delete from Event_Table
 -- values ;
 
 -- Participation table
-truncate table Participation cascade;
+-- truncate table Participation cascade;
 
-DO $$DECLARE
-    player_count INTEGER := 27;
+do $$
+declare
+    player_count integer := 27;
 
-    g_id INTEGER := 0;
-    e_start TIMESTAMP := '2023-01-01 00:00:00';
+    r_player_count integer := 0;
 
-    r_player_count INTEGER := 0;
-    min_player_count INTEGER := 0;
-    max_player_count INTEGER := 0;
+    event_row record;
 
-    r_player_id INTEGER;
+    r_player_id integer;
+begin
+    for event_row in (select event_id, date_start, min_players, max_players
+                        from Event_Table
+                        join gambling_table   using (table_id)
+                        join Game_Description using (game_id)) loop
+        r_player_count := event_row.min_players + floor(random() * (event_row.max_players - event_row.min_players));
 
-    i INTEGER;
-BEGIN
-    FOR i IN select event_id from Event_Table LOOP
-        e_start := (select date_start from Event_Table where event_id = i);
+        for _ in 1..r_player_count loop
+            r_player_id := 1 + floor(random() * player_count);
 
-        g_id = (select game_id
-                  from Gambling_Table
-                 where table_id = (select table_id
-                                     from Event_Table
-                                    where event_id = i));
-
-        min_player_count := (select min_players
-                              from Game_Description
-                             where game_id = g_id);
-        max_player_count := (select max_players
-                               from Game_Description
-                              where game_id = g_id);
-
-        r_player_count := min_player_count + FLOOR(RANDOM() * (max_player_count - min_player_count));
-
-        FOR _ IN 1..r_player_count LOOP
-            r_player_id := 1 + FLOOR(RANDOM() * player_count);
-
-            if exists (select * from Participation where r_player_id = player_id and event_id = i) then
+            if exists (select *
+                         from Participation
+                        where r_player_id = player_id
+                          and event_id = event_row.event_id) then
                 continue;
             end if;
 
-            if exists (select * from Blacklist where player_id = r_player_id and ban_date > e_start) then
+            if exists (select *
+                         from Blacklist
+                        where player_id = r_player_id
+                          and ban_date > event_row.date_start) then
                 continue;
             end if;
 
             insert into Participation (player_id, event_id)
-            values (r_player_id, i);
-        END LOOP;
-    END LOOP;
-END$$;
+            values (r_player_id, event_row.event_id);
+        end loop;
+    end loop;
+end
+$$;
 
 -- Cached
 -- insert into Participation (player_id, event_id)
@@ -238,31 +235,35 @@ values
 -- Order table
 truncate table Order_Table cascade;
 
-DO $$
-DECLARE
-    player_count INTEGER := (select count(*) from Player);
-    min_player INTEGER := (select min(player_id) from Player);
+do $$
+declare
+    player_count integer := (select count(*) from Player);
+    min_player integer := (select min(player_id) from Player);
 
-    order_count INTEGER := 500;
+    order_count integer := 500;
 
-    first_date TIMESTAMP := '2020-01-01 00:00:00';
-    last_date TIMESTAMP := '2023-12-01 00:00:00';
+    first_date timestamp := '2020-01-01 00:00:00';
+    last_date timestamp := '2023-12-01 00:00:00';
 
-    r_player_id INTEGER;
-    r_order_date TIMESTAMP;
-BEGIN
-    FOR _ IN 1..order_count LOOP
-        r_player_id := min_player + FLOOR(RANDOM() * player_count);
-        r_order_date := (first_date + (RANDOM() * (last_date - first_date)));
+    r_player_id integer;
+    r_order_date timestamp;
+begin
+    for _ in 1..order_count loop
+        r_player_id := min_player + floor(random() * player_count);
+        r_order_date := (first_date + (random() * (last_date - first_date)));
 
-        if exists (select * from Order_Table where player_id = r_player_id and order_date < r_order_date) then
+        if exists (select *
+                     from Order_Table
+                    where player_id = r_player_id
+                      and order_date < r_order_date) then
             continue;
         end if;
 
         insert into Order_Table (player_id, order_date)
         values (r_player_id, r_order_date);
-    END LOOP;
-END$$;
+    end loop;
+end
+$$;
 
 -- Cached
 -- insert into Order_Table (player_id, order_date)
@@ -271,35 +272,39 @@ END$$;
 -- Sales table
 truncate table Sale cascade;
 
-DO $$
-DECLARE
-    count_drink INTEGER := (select count(drink_id) from Drink_Info);
-    min_drink INTEGER := (select min(drink_id) from Drink_Info);
+do $$
+declare
+    count_drink integer := (select count(drink_id) from Drink_Info);
+    min_drink integer := (select min(drink_id) from Drink_Info);
 
-    r_drink_id INTEGER;
-    r_order_id INTEGER;
-    r_order_drink_count INTEGER;
-    r_drink_quantity INTEGER;
+    r_drink_id integer;
+    r_order_id integer;
+    r_order_drink_count integer;
+    r_drink_quantity integer;
 
-    i INTEGER;
-BEGIN
-    FOR i IN select order_id from Order_Table LOOP
+    i integer;
+begin
+    for i in select order_id from Order_Table loop
         r_order_id := i;
-        r_order_drink_count := 1 + FLOOR(RANDOM() * 3);
+        r_order_drink_count := 1 + floor(random() * 3);
 
-        FOR _ IN 1..r_order_drink_count LOOP
-            r_drink_id := min_drink + FLOOR(RANDOM() * count_drink);
-            r_drink_quantity := 1 + FLOOR(RANDOM() * 3);
+        for _ in 1..r_order_drink_count loop
+            r_drink_id := min_drink + floor(random() * count_drink);
+            r_drink_quantity := 1 + floor(random() * 3);
 
-            if exists (select * from Sale where drink_id = r_drink_id and order_id = r_order_id) then
+            if exists (select *
+                         from Sale
+                        where drink_id = r_drink_id
+                          and order_id = r_order_id) then
                 continue;
             end if;
 
             insert into Sale (drink_id, order_id, quantity)
             values (r_drink_id, r_order_id, r_drink_quantity);
-        END LOOP;
-    END LOOP;
-END$$;
+        end loop;
+    end loop;
+end
+$$;
 
 -- Cached
 -- insert into Sales (drink_id, order_id, drink_count)
@@ -307,26 +312,74 @@ END$$;
 
 ---- Transactions
 
--- Transaction table (under maintenance)
--- DO $$
--- DECLARE
---     player_count INTEGER := 27;
---     transaction_count INTEGER := 100;
---
---     player_id INTEGER;
---     transaction_date TIMESTAMP;
---     transaction_amount INTEGER;
--- BEGIN
---     FOR i IN 1..transaction_count LOOP
---         player_id := 1 + FLOOR(RANDOM() * player_count);
---         transaction_date := (CURRENT_DATE - (RANDOM() * 365));
---         transaction_amount := 1 + FLOOR(RANDOM() * 1000);
---
---         insert into Transaction (player_id, transaction_date, transaction_amount)
---         values (player_id, transaction_date, transaction_amount);
---     END LOOP;
--- END
--- $$;
+-- Chip transaction table
+
+truncate table chip_transaction cascade;
+
+do $$
+declare
+    first_date timestamp := '2020-01-01 00:00:00';
+    last_date timestamp := '2023-12-01 00:00:00';
+
+    r_player_id integer;
+    r_date timestamp;
+    r_amount integer;
+
+    table_row record;
+begin
+    for table_row in (select order_id, order_date, player_id, sum(quantity * drink_price)
+                        from Order_Table
+                               join Sale       using (order_id)
+                               join Drink_Info using (drink_id)
+                    group by order_id, order_date, player_id
+                    order by order_date) loop
+
+        insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+        values ('Bar', table_row.sum, table_row.order_date, table_row.player_id, null, table_row.order_id);
+    end loop;
+
+    for _ in 1..600 loop
+        r_player_id := 1 + floor(random() * 27);
+        r_date := (first_date + (random() * (last_date - first_date)));
+
+        if exists (select *
+                     from blacklist
+                    where player_id = r_player_id
+                      and ban_date > r_date) then
+            continue;
+        end if;
+
+        insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+        values ('Other',
+                1 + floor(random() * 200),
+                r_date,
+                r_player_id,
+                null,
+                null);
+    end loop;
+
+    for table_row in (select player_id, event_id, date_start, date_end
+                      from participation
+                      join Event_Table using (event_id)) loop
+        r_date = table_row.date_start + (random() * (table_row.date_end - table_row.date_start));
+--         if random() > 0.1 then
+            r_amount = -1 - floor(random() * 10000);
+--         else
+--             r_amount = -1 - floor(random() * 100);
+--         end if;
+
+        insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+        values ('Game',
+                r_amount,
+                r_date,
+                table_row.player_id,
+                table_row.event_id,
+                null);
+    end loop;
+end
+$$;
+
+select * from Chip_Transaction where type_of_the_transaction = 'Game';
 
 -- Cached
 
