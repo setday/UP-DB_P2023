@@ -189,7 +189,7 @@ $$;
 
 do $$
 declare
-    player_count integer := 27;
+    player_count integer := (select count(*) from Player);
 
     r_player_count integer := 0;
 
@@ -197,7 +197,7 @@ declare
 
     r_player_id integer;
 begin
-    for event_row in (select event_id, date_start, min_players, max_players
+    for event_row in (select event_id, date_start, date_end, min_players, max_players
                         from Event_Table
                         join gambling_table   using (table_id)
                         join Game_Description using (game_id)) loop
@@ -208,15 +208,11 @@ begin
 
             if exists (select *
                          from Participation
-                        where r_player_id = player_id
-                          and event_id = event_row.event_id) then
-                continue;
-            end if;
-
-            if exists (select *
-                         from Blacklist
+                         join Event_Table using (event_id)
                         where player_id = r_player_id
-                          and ban_date > event_row.date_start) then
+                          and ((date_start < event_row.date_end
+                          and date_end > event_row.date_start)
+                          or event_id = event_row.event_id)) then
                 continue;
             end if;
 
@@ -338,6 +334,10 @@ declare
     r_date timestamp;
     r_amount integer;
 
+    i_player integer;
+    p_amount integer;
+    d_amount integer;
+
     table_row record;
 begin
     for table_row in (select order_id, order_date, player_id, sum(quantity * drink_price)
@@ -375,7 +375,7 @@ begin
                       from participation
                       join Event_Table using (event_id)) loop
         r_date = table_row.date_start + (random() * (table_row.date_end - table_row.date_start));
-        if random() > 0.1 then
+        if random() > 0.9 then
             r_amount = 1 + floor(random() * 10000);
         else
             r_amount = 1 + floor(random() * 100);
@@ -390,8 +390,63 @@ begin
                 null);
     end loop;
 
+    -- wins
+    for table_row in (select event_id, date_end, -floor(sum(amount) * 0.8) as total_amount
+                        from event_table et
+                        join participation p using (event_id)
+                        join chip_transaction ct using (participation_id)
+                       where type_of_the_transaction = 'Game'
+                    group by event_id) loop
+        r_player_id := (select player_id
+                          from participation
+                         where event_id = table_row.event_id
+                         order by random()
+                         limit 1);
 
+        insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+        values ('Game_Result',
+                table_row.total_amount,
+                table_row.date_end,
+                r_player_id,
+                table_row.event_id,
+                null);
+    end loop;
+
+    for i_player in (select player_id from player) loop
+        p_amount := 0;
+
+        for table_row in (select ct.transaction_date, sum(ct.amount) over (
+                                                                                 partition by ct.player_id
+                                                                                 order by ct.transaction_date
+                                                                            ) as total_amount
+                              from chip_transaction ct
+                             where player_id = i_player
+                          order by ct.player_id, ct.transaction_date) loop
+
+            if table_row.total_amount + p_amount < 0 then
+                d_amount := -(table_row.total_amount + p_amount) + floor(random() * 1000);
+                p_amount := p_amount + d_amount;
+                insert into chip_transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+                values ('Chip',
+                        d_amount,
+                        table_row.transaction_date - random() * ('2023-12-03'::timestamp - '2023-12-01'::timestamp),
+                        i_player,
+                        null,
+                        null);
+            else
+                if random() > 0.75 then
+                    d_amount := -(table_row.total_amount + p_amount) * random();
+                    p_amount := p_amount + d_amount;
+                    insert into chip_transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
+                    values ('Chip',
+                            d_amount,
+                            table_row.transaction_date + random() * ('2023-12-01 12:00:00'::timestamp - '2023-12-01 1:00:00'::timestamp),
+                            i_player,
+                            null,
+                            null);
+                end if;
+            end if;
+            end loop;
+    end loop;
 end
 $$;
-
--- select * from Chip_Transaction;

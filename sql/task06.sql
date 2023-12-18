@@ -1,11 +1,11 @@
 -- 1
--- В результате выполнения запроса выведутся участники, у которых суммы транзакций больше 50 (богатые буратины, так сказать)
+-- В результате выполнения запроса выведутся участники, у которых суммы транзакций больше 500 (богатые буратины, так сказать)
 select p.player_id, p.nickname, sum(ct.amount) as total_amount
 from player p
 join chip_transaction ct on p.player_id = ct.player_id
 where ct.type_of_the_transaction != 'Game_Result'
 group by p.player_id, p.nickname
-having sum(ct.amount) > 50
+having sum(ct.amount) > 500
 order by total_amount desc;
 
 -- 2
@@ -80,3 +80,20 @@ from
 order by
     ct.player_id,
     ct.transaction_date;
+
+-- A suggestion:
+select
+    p.nickname,
+    ct.transaction_date,
+    sum(ct.amount) over (
+        partition by ct.player_id
+        order by ct.transaction_date
+    ) as total_amount
+from
+    chip_transaction ct
+join
+    player p using (player_id)
+order by
+    ct.player_id,
+    ct.transaction_date;
+

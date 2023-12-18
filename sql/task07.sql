@@ -8,8 +8,8 @@ create or replace
 view v_player as
 select
 	p.nickname as "Кличка",
-	overlay(p.first_name placing repeat('*', length(p.first_name) - 1) from 1) || ' ' || overlay(p.last_name placing repeat('*', length(p.last_name) - 1) from 1) as "Имя, Фамилия",
-	overlay(p.address placing repeat('*', position(',' in p.address) + 1) from 1) as "Адрес"
+	overlay(p.first_name placing repeat('*', length(p.first_name) - 1) from 2) || ' ' || overlay(p.last_name placing repeat('*', length(p.last_name) - 1) from 1) as "Имя, Фамилия",
+	overlay(p.address placing repeat('*', position(',' in p.address) + 1) from 2) as "Адрес"
 from
 	db_project.Player p;
 
@@ -36,7 +36,7 @@ select
 	end as "Возможное количество игроков",
 		g.hall as "Зал"
 from
-		db_project.Game_Description g
+		db_project.Game_Description g;
 
 -- Gambling_Table;
 create or replace

@@ -38,9 +38,9 @@
 > <br/><span style="color:lightgreen">├── 2c - физическая модель</span>
 > <br/>║
 > <br/>[<span style="color:lightgreen">├── 3 - создание таблиц и схемы</span>](sql/task03.sql)
-> <br/>[<span style="color:lightblue">├── 4 - заполнение таблиц</span>](sql/task04.sql)
+> <br/>[<span style="color:lightgreen">├── 4 - заполнение таблиц</span>](sql/task04.sql)
 > <br/>[<span style="color:lightgreen">├── 5 - CRUD-запросы (INSERT, SELECT, UPDATE, DELETE)</span>](sql/task05.sql)
-> <br/>[<span style="color:lightgreen">├── 6 - смысловые запросы (GROUP BY + HAVING, ORDER BY, оконные функции)</span>](sql/task06.sql)
+> <br/>[<span style="color:lightblue">├── 6 - смысловые запросы (GROUP BY + HAVING, ORDER BY, оконные функции)</span>](sql/task06.sql)
 > <br/>[<span style="color:lightgreen">├── 7 - представления под каждуб таблицу</span>](sql/task07.sql)
 > <br/>[<span style="color:lightgreen">├── 8 - 3 сложных представления</span>](sql/task08.sql)
 > <br/>[<span style="color:pink">├── 9 - 2 триггера</span>](task09.sql)
