@@ -1,11 +1,9 @@
 create schema if not exists db_project_view;
 
 set
-search_path = db_project_view,
+search_path = db_project_view, db_project,
 public;
 -- Player
-drop view if exists v_player;
-
 create or replace
 view v_player as
 select
@@ -16,8 +14,6 @@ from
 	db_project.Player p;
 
 -- Blacklist;
-drop view if exists v_blacklist;
-
 create or replace
 view v_blacklist as
 select
@@ -30,8 +26,6 @@ inner join db_project.Player p on
 	b.player_id = p.player_id;
 
 -- Game_Description;
-drop view if exists v_game_description;
-
 create or replace
 view v_game_description as
 select
@@ -45,8 +39,6 @@ from
 		db_project.Game_Description g
 
 -- Gambling_Table;
-drop view if exists v_gambling_table;
-
 create or replace
 view v_gambling_table as
 select
@@ -62,8 +54,6 @@ group by
 	gd.game_name;
 
 -- Event_Table;
-drop view if exists v_event_table;
-
 create or replace
 view v_event_table as
 select
@@ -81,8 +71,6 @@ inner join db_project.game_description gd on
 	gt.game_id = gd.game_id;
 
 -- Participation;
-drop view if exists v_participation;
-
 create or replace
 view v_participation as
 select
@@ -105,8 +93,6 @@ inner join db_project.player p2 on
 	p.player_id = p2.player_id;
 
 -- Drink_Info;
-drop view if exists v_drink_info;
-
 create or replace
 view v_drink_info as
 select
@@ -117,8 +103,6 @@ from
 	db_project.Drink_info di;
 
 -- Order_Table;
-drop view if exists v_order_table;
-
 create or replace
 view v_order_table as
 select
@@ -135,8 +119,6 @@ group by
 	ot.order_date;
 
 -- Sale;
-drop view if exists v_sale;
-
 create or replace
 view v_sale as
 select
@@ -154,8 +136,6 @@ inner join db_project.player p on
 	p.player_id = ot.player_id;
 
 -- Chip_Transaction;
-drop view if exists v_chip_transaction;
-
 create or replace
 view v_chip_transaction as
 select
