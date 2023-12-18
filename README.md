@@ -29,6 +29,24 @@
 >
 > Статистика по бару: самые продаваемые напитки, %, доход, по дням?
 
+# Структура проекта
+
+> ║
+> <br/><span style="color:lightgreen">├── 1 - основные сущности модели; "факты" и "измерения"</span>
+> <br/><span style="color:lightgreen">├── 2a - концептуальная модель</span>
+> <br/><span style="color:lightgreen">├── 2b - логическая модель</span>
+> <br/><span style="color:lightgreen">├── 2c - физическая модель</span>
+> <br/>║
+> <br/>[<span style="color:lightgreen">├── 3 - создание таблиц и схемы</span>](sql/task03.sql)
+> <br/>[<span style="color:lightblue">├── 4 - заполнение таблиц</span>](sql/task04.sql)
+> <br/>[<span style="color:lightgreen">├── 5 - CRUD-запросы (INSERT, SELECT, UPDATE, DELETE)</span>](sql/task05.sql)
+> <br/>[<span style="color:lightgreen">├── 6 - смысловые запросы (GROUP BY + HAVING, ORDER BY, оконные функции)</span>](sql/task06.sql)
+> <br/>[<span style="color:lightgreen">├── 7 - представления под каждуб таблицу</span>](sql/task07.sql)
+> <br/>[<span style="color:lightgreen">├── 8 - 3 сложных представления</span>](sql/task08.sql)
+> <br/>[<span style="color:pink">├── 9 - 2 триггера</span>](task09.sql)
+> <br/>[<span style="color:lightblue">├── 10 - 2 процедуры</span>](sql/task10.sql)
+> <br/>[<span style="color:lightblue">├── 11 - python - ORM</span>](code/task11.py)
+> <br/>║
 
 # 1 (основные сущности модели; "факты" и "измерения")
 
@@ -66,15 +84,3 @@ VIP (very important person) список
 # 2c (физическая модель)
 
 <img src="./pic/svg/2c.svg" alt="2c_img" width="70%"/>
-
-# 3 (создание БД)
-
-```shell
-psql -U postgres -d postgres -f task03.sql
-```
-
-# 4 (Импортирование данных)
-
-```shell
-psql -U postgres -d postgres -f task04.sql
-```
