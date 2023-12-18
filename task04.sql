@@ -1,9 +1,32 @@
-set search_path = db_project, public;
+-- Заполнить БД данными (по 5–10 записей в каждую таблицу).
+-- Для заполнения можно использовать как INSERT, так и внешние источники данных (XLS, CSV).
+-- 5dd145e4d040f7a382ec57649179f7d008b522c4
+
+truncate table Player cascade;
+truncate table Blacklist cascade;
+truncate table Game_Description cascade;
+truncate table Gambling_Table cascade;
+truncate table Event_Table cascade;
+truncate table Participation cascade;
+truncate table Drink_Info cascade;
+truncate table Order_Table cascade;
+truncate table Sale cascade;
+truncate table chip_transaction cascade;
+alter sequence player_player_id_seq restart with 1;
+alter sequence blacklist_blacklist_id_seq restart with 1;
+alter sequence game_description_game_id_seq restart with 1;
+alter sequence gambling_table_table_id_seq restart with 1;
+alter sequence event_table_event_id_seq restart with 1;
+alter sequence participation_participation_id_seq restart with 1;
+alter sequence drink_info_drink_id_seq restart with 1;
+alter sequence order_table_order_id_seq restart with 1;
+alter sequence chip_transaction_transaction_id_seq restart with 1;
 
 ---- Information about players
 
 -- Player table
 -- truncate table Player cascade;
+-- alter sequence player_player_id_seq restart with 1;
 
 insert into Player (nickname, first_name, last_name, address) 
 values 
@@ -33,11 +56,12 @@ values
     ('BluffMaster',    'Екатерина', 'Никитина',     'пр. Победы, 38, г. Липецк, Россия'),
     ('ChipLeader',     'Артур',     'Макаров',      'ул. Заречная, 72, г. Балашиха, Россия'),
     ('LuckStruck',     'Евгения',   'Андреева',     'пр. Ломоносова, 5, г. Новокузнецк, Россия'),
-    ('AllInAce',       'Дарья',     'Орлова',       'ул. Мира, 22, г. Киров, Россия');
-
+    ('AllInAce',       'Дарья',     'Орлова',       'ул. Мира, 22, г. Киров, Россия'),
+    ('SetDay',         'Александр', 'Серков',       'ул. Коллонтай, 24, г. Санкт-Петербург, Россия');
 
 -- Banned table
 -- truncate table Blacklist cascade;
+-- alter sequence blacklist_blacklist_id_seq restart with 1;
 
 insert into Blacklist (ban_reason, ban_date, player_id) 
 values 
@@ -52,6 +76,7 @@ values
 
 -- Game description table
 -- truncate table Game_Description cascade;
+-- alter sequence game_description_game_id_seq restart with 1;
 
 insert into Game_Description (game_name, min_players, max_players, hall)
 values 
@@ -71,6 +96,7 @@ values
 
 -- Gambling table table
 -- truncate table Gambling_Table cascade;
+-- alter sequence gambling_table_table_id_seq restart with 1;
 
 insert into Gambling_Table (out_of_order, game_id)
 values 
@@ -109,6 +135,7 @@ values
 
 -- Event table
 -- truncate table Event_Table cascade;
+-- alter sequence event_table_event_id_seq restart with 1;
 
 do $$
 declare
@@ -156,13 +183,9 @@ begin
 end
 $$;
 
--- Cached
-
--- insert into Event_Table (table_id, date_start, date_end)
--- values ;
-
 -- Participation table
 -- truncate table Participation cascade;
+-- alter sequence participation_participation_id_seq restart with 1;
 
 do $$
 declare
@@ -204,14 +227,11 @@ begin
 end
 $$;
 
--- Cached
--- insert into Participation (player_id, event_id)
--- values ;
-
 ---- Bar
 
 -- Drink info table
-truncate table Drink_Info cascade;
+-- truncate table Drink_Info cascade;
+-- alter sequence drink_info_drink_id_seq restart with 1;
 
 insert into Drink_Info (drink_title, alcohol_percentage, drink_price)
 values
@@ -233,7 +253,8 @@ values
 
 
 -- Order table
-truncate table Order_Table cascade;
+-- truncate table Order_Table cascade;
+-- alter sequence order_table_order_id_seq restart with 1;
 
 do $$
 declare
@@ -265,12 +286,8 @@ begin
 end
 $$;
 
--- Cached
--- insert into Order_Table (player_id, order_date)
--- values ;
-
 -- Sales table
-truncate table Sale cascade;
+-- truncate table Sale cascade;
 
 do $$
 declare
@@ -306,15 +323,11 @@ begin
 end
 $$;
 
--- Cached
--- insert into Sales (drink_id, order_id, drink_count)
--- values ;
-
 ---- Transactions
 
--- Chip transaction table
-
-truncate table chip_transaction cascade;
+-- Chip transaction table (Under maintenance)
+-- truncate table chip_transaction cascade;
+-- alter sequence chip_transaction_transaction_id_seq restart with 1;
 
 do $$
 declare
@@ -335,7 +348,7 @@ begin
                     order by order_date) loop
 
         insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
-        values ('Bar', table_row.sum, table_row.order_date, table_row.player_id, null, table_row.order_id);
+        values ('Bar', -table_row.sum, table_row.order_date, table_row.player_id, null, table_row.order_id);
     end loop;
 
     for _ in 1..600 loop
@@ -351,7 +364,7 @@ begin
 
         insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
         values ('Other',
-                1 + floor(random() * 200),
+                -1 - floor(random() * 200),
                 r_date,
                 r_player_id,
                 null,
@@ -362,26 +375,23 @@ begin
                       from participation
                       join Event_Table using (event_id)) loop
         r_date = table_row.date_start + (random() * (table_row.date_end - table_row.date_start));
---         if random() > 0.1 then
-            r_amount = -1 - floor(random() * 10000);
---         else
---             r_amount = -1 - floor(random() * 100);
---         end if;
+        if random() > 0.1 then
+            r_amount = 1 + floor(random() * 10000);
+        else
+            r_amount = 1 + floor(random() * 100);
+        end if;
 
         insert into Chip_Transaction (type_of_the_transaction, amount, transaction_date, player_id, participation_id, order_id)
         values ('Game',
-                r_amount,
+                -r_amount,
                 r_date,
                 table_row.player_id,
                 table_row.event_id,
                 null);
     end loop;
+
+
 end
 $$;
 
-select * from Chip_Transaction where type_of_the_transaction = 'Game';
-
--- Cached
-
--- insert into Transaction (player_id, transaction_date, transaction_amount)
--- values ;
+-- select * from Chip_Transaction;
