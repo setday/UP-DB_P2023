@@ -3,26 +3,30 @@
 select p.player_id, p.nickname, sum(ct.amount) as total_amount
 from player p
 join chip_transaction ct on p.player_id = ct.player_id
-where ct.type_of_the_transaction != 'Game_Result'
 group by p.player_id, p.nickname
 having sum(ct.amount) > 500
 order by total_amount desc;
 
+
 -- 2
 -- В результате выполнения запроса для каждого участника выведется количество сыгранных игр (азартные буратины, так сказать)
-select p.player_id, p.nickname, count(distinct pa.event_id) as games_played
+select p.player_id, p.nickname, count(pa.event_id) as games_played
 from player p
 join participation pa on p.player_id = pa.player_id
-group by p.player_id, p.nickname
+group by p.player_id
 order by games_played desc;
+
 
 -- 3
 -- В результате выполнения запроса выведется среднее значение сумм транзакций для каждого участника (средние буратины, так сказать)
-select player_id,
-       avg(amount) over (partition by player_id) as avg_amount
-from chip_transaction
-group by player_id, amount
-order by avg_amount desc;
+select
+  distinct player_id,
+  avg(amount) over (partition by player_id) as avg_amount
+from
+  chip_transaction
+order by
+  avg_amount desc;
+
 
 -- 4
 -- В результате выполнения запроса для каждого стола выведется количество игр, в которых он участвовал (популярные столы, так сказать)
@@ -33,6 +37,7 @@ from
     event_table e
 order by
     e.table_id;
+
 
 -- 5
 -- В результате выполнения запроса для каждого участника выведется игра, в которую тот играл больше всего раз (любимые игры, так сказать)
@@ -81,7 +86,9 @@ order by
     ct.player_id,
     ct.transaction_date;
 
--- A suggestion:
+
+-- 7
+-- В результате выполнения запроса выведутся суммы транзанзакций по дням для каждого участника
 select
     p.nickname,
     ct.transaction_date,
@@ -97,3 +104,28 @@ order by
     ct.player_id,
     ct.transaction_date;
 
+
+-- 8
+-- В результате выполнения запроса для каждой игры выведется рейтинг участников
+select
+  eap.event_id,
+  eap.player_id,
+  sum(ct.amount) as total_amount,
+  rank() over (partition by eap.event_id order by sum(ct.amount) desc) as participant_rank
+from
+  (
+    select
+      et.event_id,
+      p.player_id,
+      p.participation_id
+    from
+      event_table et
+      join participation p on p.event_id = et.event_id
+  ) as eap
+join chip_transaction ct on ct.participation_id = eap.participation_id
+where
+  ct.type_of_the_transaction in ('Game_Result', 'Game')
+group by
+  eap.event_id, eap.player_id
+order by
+  eap.event_id;
