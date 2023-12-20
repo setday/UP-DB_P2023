@@ -1,5 +1,6 @@
 -- 1
--- В результате выполнения запроса выведутся участники, у которых суммы транзакций больше 500 (богатые буратины, так сказать)
+-- В результате выполнения запроса выведутся участники, у которых суммы
+-- транзакций больше 500 (богатые буратины, так сказать)
 select p.player_id, p.nickname, sum(ct.amount) as total_amount
 from player p
 join chip_transaction ct on p.player_id = ct.player_id
@@ -9,7 +10,8 @@ order by total_amount desc;
 
 
 -- 2
--- В результате выполнения запроса для каждого участника выведется количество сыгранных игр (азартные буратины, так сказать)
+-- В результате выполнения запроса для каждого участника выведется количество
+-- сыгранных игр (азартные буратины, так сказать)
 select p.player_id, p.nickname, count(pa.event_id) as games_played
 from player p
 join participation pa on p.player_id = pa.player_id
@@ -18,7 +20,8 @@ order by games_played desc;
 
 
 -- 3
--- В результате выполнения запроса выведется среднее значение сумм транзакций для каждого участника (средние буратины, так сказать)
+-- В результате выполнения запроса выведется среднее значение сумм транзакций
+-- для каждого участника (средние буратины, так сказать)
 select
   distinct player_id,
   avg(amount) over (partition by player_id) as avg_amount
@@ -29,7 +32,8 @@ order by
 
 
 -- 4
--- В результате выполнения запроса для каждого стола выведется количество игр, в которых он участвовал (популярные столы, так сказать)
+-- В результате выполнения запроса для каждого стола выведется количество игр,
+-- в которых он участвовал (популярные столы, так сказать)
 select distinct
     e.table_id,
     count(*) over (partition by e.table_id) as games_played_on_table
@@ -86,7 +90,8 @@ order by
 
 
 -- 7
--- В результате выполнения запроса выведутся суммы транзанзакций по дням для каждого участника
+-- В результате выполнения запроса выведутся суммы транзанзакций по дням для
+-- каждого участника
 select
     p.nickname,
     ct.transaction_date,
@@ -148,3 +153,26 @@ from (
 where ot.nexttransactiontype = 'Bar' and ot.type_of_the_transaction != 'Bar'
 group by player_id, type_of_the_transaction
 order by player_id, transactioncount desc;
+
+
+-- 10
+-- В результате выполнения запроса для каждого игрока будет найден игрок,
+-- с которым он играет чаще всего
+select
+    player1_id,
+    player2_id,
+    gamesplayedtogether
+from (
+    select
+        p1.player_id as player1_id,
+        p2.player_id as player2_id,
+        count(*) as gamesplayedtogether,
+        rank() over (partition by p1.player_id order by count(*) desc) as pair_rank
+    from
+        participation p1
+        join participation p2 on p1.event_id = p2.event_id and p1.player_id != p2.player_id
+    group by
+        p1.player_id, p2.player_id
+) as rankedpairs
+where
+    pair_rank = 1;
