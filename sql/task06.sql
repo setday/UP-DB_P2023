@@ -40,33 +40,31 @@ order by
 
 
 -- 5
--- В результате выполнения запроса для каждого участника выведется игра, в которую тот играл больше всего раз (любимые игры, так сказать)
-select
-    p.player_id,
-    p.nickname,
-    (
-        select
-            gd.game_name
-        from
-            chip_transaction ct
-            join participation pa on ct.participation_id = pa.participation_id
-            join event_table e on pa.event_id = e.event_id
-            join gambling_table gt on e.table_id = gt.table_id
-            join game_description gd on gt.game_id = gd.game_id
-        where
-            ct.player_id = p.player_id
-        group by
-            gd.game_name
-        order by
-            sum(ct.amount) desc
-        limit 1
-    ) as favorite_game
-from
-    player p;
+-- В результате выполнения запроса для каждого участника выведется игра,
+-- в которую тот играл больше всего раз (любимые игры, так сказать)
+select fav_game_id.player_id, gd.game_name
+from (
+    select
+        distinct on (pa.player_id) pa.player_id,
+        game_id,
+        count(*) over (partition by pa.player_id, gt.game_id) as pa_count
+    from
+        participation pa
+        join event_table e on pa.event_id = e.event_id
+        join gambling_table gt on gt.table_id = e.table_id
+    group by
+        pa.player_id, pa.participation_id, e.event_id, gt.game_id
+    order by
+        pa.player_id, pa_count desc
+) as fav_game_id
+join game_description gd on gd.game_id = fav_game_id.game_id
+group by fav_game_id.player_id, gd.game_name
+order by fav_game_id.player_id;
 
 
 -- 6
--- В результате выполнения запроса выведется для каждой транзакции участника информация о предыдущей транзакции (тёмное прошлое, так сказать)
+-- В результате выполнения запроса выведется для каждой транзакции участника
+-- информация о предыдущей транзакции (тёмное прошлое, так сказать)
 select
     ct.player_id,
     ct.transaction_id,
@@ -129,3 +127,24 @@ group by
   eap.event_id, eap.player_id
 order by
   eap.event_id;
+
+
+-- 9
+-- В результате выполнения запроса для каждого игрока будет выведен тип транзакций,
+-- которые чаще всего предшествуют покупке алкоголя
+select
+ distinct on (player_id)
+    player_id,
+    type_of_the_transaction,
+    count(*) as transactioncount
+from (
+    select
+        ct.player_id,
+        ct.transaction_id,
+        ct.type_of_the_transaction,
+        lead(ct.type_of_the_transaction) over (partition by ct.player_id order by ct.transaction_date) as nexttransactiontype
+    from chip_transaction ct
+) ot
+where ot.nexttransactiontype = 'Bar' and ot.type_of_the_transaction != 'Bar'
+group by player_id, type_of_the_transaction
+order by player_id, transactioncount desc;
