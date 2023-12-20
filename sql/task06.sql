@@ -136,7 +136,7 @@ order by
 
 -- 9
 -- В результате выполнения запроса для каждого игрока будет выведен тип транзакций,
--- которые чаще всего предшествуют покупке алкоголя
+-- которые чаще всего предшествуют ЗАГУЛУ (покупке алкоголя)
 select
  distinct on (player_id)
     player_id,
@@ -176,3 +176,19 @@ from (
 ) as rankedpairs
 where
     pair_rank = 1;
+
+-- 11
+-- В результате выполнения запроса для каждого ЗАБАНЕННОГО игрока выведется
+-- последняя транзакция, перед которой тот попал В БАНЮ
+select
+	distinct on (player_id)
+    ct.player_id,
+    ct.transaction_id,
+    ct.transaction_date
+from
+    chip_transaction ct
+    join blacklist bl on ct.player_id = bl.player_id
+where
+    ct.transaction_date < bl.ban_date
+order by
+    player_id, ct.transaction_date desc;
