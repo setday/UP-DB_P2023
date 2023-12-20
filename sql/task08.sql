@@ -10,7 +10,7 @@ SELECT
     COUNT(DISTINCT et.event_id) AS games_played,
     COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Chip' AND ct.amount > 0 THEN ct.amount ELSE 0 END), 0) AS chips_bought_at_the_checkout,
     COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Chip'AND ct.amount < 0 THEN -ct.amount ELSE 0 END), 0) AS chips_sold,
-    COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Game' AND ct.amount > 0 THEN ct.amount ELSE 0 END), 0) AS chips_used_during_the_games,
+    -COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Game' THEN ct.amount ELSE 0 END), 0) AS chips_used_during_the_games,
     COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Game_Result' AND ct.amount > 0 THEN ct.amount ELSE 0 END), 0) AS chips_won,
     COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Bar' THEN -ct.amount ELSE 0 END), 0) AS bar_spending
 FROM
@@ -59,7 +59,7 @@ SELECT
     gd.game_name,
     COUNT(DISTINCT p.player_id) AS players_count,
     SUM(EXTRACT(EPOCH FROM et.date_end - et.date_start)) AS total_play_time_seconds,
-    SUM(CASE WHEN ct.type_of_the_transaction = 'Game' THEN ct.amount ELSE 0 END) AS total_investment,
+    -SUM(CASE WHEN ct.type_of_the_transaction = 'Game' THEN ct.amount ELSE 0 END) AS total_investment,
     COALESCE(SUM(CASE WHEN ct.type_of_the_transaction = 'Game_Result' THEN ct.amount ELSE 0 END), 0) AS total_venue_expenses
 FROM
     Game_Description gd
