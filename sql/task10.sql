@@ -7,7 +7,7 @@ public;
 -- 01
 drop procedure if exists search_event;
 -- найти игру и добавить участие в Participation, начало которой между date_from и date_to, в которой не достигнуто максимальное количество игроков
-create procedure add_participation(player_id_new integer, date_from date, date_to date)
+create procedure search_event(player_id_new integer, date_from timestamp(0), date_to timestamp(0))
 as $$
 declare
     event_search integer;
@@ -40,7 +40,7 @@ $$
 language plpgsql;
 
 
--- call add_participation(3, '2022-10-01', '2022-10-02');
+-- call call search_event(1, '2023-09-03 11:59:06.000 ', '2023-10-26 01:23:28.000');
 
 -- 02
 drop procedure if exists order_drink_for_event;
@@ -49,9 +49,9 @@ create procedure order_drink_for_event(event_id_ integer, drink_id_ integer)
 as $$
 declare
     player_in_event integer;
-   price_of_drink numeric;
-  date_of_event date;
- last_id integer;
+    price_of_drink numeric;
+    date_of_event timestamp(0);
+    last_id integer;
 begin
 	if (select count(1) from Event_table where
 	event_id = event_id_) = 0 then
@@ -76,7 +76,7 @@ begin
 	loop
 		insert into Order_table(player_id, order_date) values(player_in_event, date_of_event) returning order_id into last_id;
 		insert into Sale(drink_id, order_id) values (drink_id_, last_id);
-		insert into Chip_transaction(player_id, order_id, type_of_the_transaction, amount, transaction_date) values(player_in_event, last_id, 'Bar', price_of_drink, date_of_event);
+		insert into Chip_transaction(player_id, order_id, type_of_the_transaction, amount, transaction_date) values(player_in_event, last_id, 'Bar', (-1)*price_of_drink, date_of_event);
 	end loop;
 	
 end;
