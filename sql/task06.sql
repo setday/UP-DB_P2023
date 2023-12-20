@@ -192,3 +192,41 @@ where
     ct.transaction_date < bl.ban_date
 order by
     player_id, ct.transaction_date desc;
+
+
+-- 12
+-- В результате выполнения запроса для каждого выводится самый СЧАСТЛИВЫЙ стол,
+-- то есть тот, для которого отношение выигрышей к проигрышам максимальное 
+select
+    sub.player_id,
+    sub.table_id,
+    sub.wins,
+    sub.losses,
+    sub.win_loss_ratio
+from (
+    select
+        ct.player_id,
+        e.table_id,
+        sum(case when ct.amount > 0 then 1 else 0 end) as wins,
+        sum(case when ct.amount < 0 then 1 else 0 end) as losses,
+        case
+            when sum(case when ct.amount < 0 then 1 else 0 end) = 0 then null
+            else (sum(case when ct.amount > 0 then 1 else 0 end) * 1.0) /
+                 sum(case when ct.amount < 0 then 1 else 0 end)
+        end as win_loss_ratio,
+        rank() over (partition by ct.player_id order by case
+            when sum(case when ct.amount < 0 then 1 else 0 end) = 0 then null
+            else (sum(case when ct.amount > 0 then 1 else 0 end) * 1.0) /
+                 sum(case when ct.amount < 0 then 1 else 0 end)
+        end desc nulls last) as rnk
+    from
+        chip_transaction ct
+    join
+        participation p on ct.participation_id = p.participation_id
+    join
+        event_table e on p.event_id = e.event_id
+    group by
+        ct.player_id,
+        e.table_id
+) sub
+where sub.rnk = 1;
