@@ -7,7 +7,8 @@ public;
 -- 01
 drop procedure if exists search_event;
 -- найти игру и добавить участие в Participation, начало которой между date_from и date_to, в которой не достигнуто максимальное количество игроков
-create procedure search_event(player_id_new integer, date_from timestamp(0), date_to timestamp(0))
+create or replace procedure search_event(player_id_new integer, date_from timestamp(0), date_to timestamp(0))
+language plpgsql
 as $$
 declare
     event_search integer;
@@ -36,8 +37,7 @@ begin
 	end loop;
 	
 end;
-$$
-language plpgsql;
+$$;
 
 
 -- call call search_event(1, '2023-09-03 11:59:06.000 ', '2023-10-26 01:23:28.000');
@@ -45,7 +45,8 @@ language plpgsql;
 -- 02
 drop procedure if exists order_drink_for_event;
 -- сделать заказ напитка для каждого игрока события к началу игры
-create procedure order_drink_for_event(event_id_ integer, drink_id_ integer)
+create or replace procedure order_drink_for_event(event_id_ integer, drink_id_ integer)
+language plpgsql
 as $$
 declare
     player_in_event integer;
@@ -80,9 +81,7 @@ begin
 	end loop;
 	
 end;
-$$
-language plpgsql;
-
+$$;
 
 -- call order_drink_for_event(1, 1);
 -- call order_drink_for_event(2, 3);
